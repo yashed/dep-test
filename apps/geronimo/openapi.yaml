@@ -1,0 +1,113 @@
+openapi: 3.0.3
+info:
+  title: FastAPI
+  description: API specification for the FastAPI application.
+  version: 0.2.0
+servers:
+  - url: http://localhost:8000
+    description: Local Gateway URL
+paths:
+  /generate_data:
+    post:
+      summary: Generate Data
+      operationId: generate_data
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadRequest"
+      responses:
+        "200":
+          description: Geronimo response sent successfully
+          content:
+            application/json:
+              example:
+                message: "Geronimo response sent successfully"
+                status: "success"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              example:
+                detail: "Internal server error"
+components:
+  schemas:
+    EmailInfo:
+      type: object
+      required:
+        - subject
+        - from_
+        - to
+        - cc
+      properties:
+        subject:
+          type: string
+          description: Subject of the email
+        from_:
+          type: string
+          description: Sender's email address
+        to:
+          type: array
+          items:
+            type: string
+          description: List of recipient email addresses
+        cc:
+          type: array
+          items:
+            type: string
+          description: List of CC email addresses
+    LeadInfo:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - jobTitle
+        - company
+        - country
+        - state
+        - areaOfInterest
+        - contactReason
+        - industry
+        - canHelpComment
+      properties:
+        firstName:
+          type: string
+          description: First name of the lead
+        lastName:
+          type: string
+          description: Last name of the lead
+        jobTitle:
+          type: string
+          description: Job title of the lead
+        company:
+          type: string
+          description: Company name of the lead
+        country:
+          type: string
+          description: Country of the lead
+        state:
+          type: string
+          description: State of the lead
+        areaOfInterest:
+          type: string
+          description: Area of interest of the lead
+        contactReason:
+          type: string
+          description: Reason for contact
+        industry:
+          type: string
+          description: Industry of the lead
+        canHelpComment:
+          type: string
+          description: Additional comments on how assistance can be provided
+    LeadRequest:
+      type: object
+      required:
+        - emailInfo
+        - leadInfo
+      properties:
+        emailInfo:
+          $ref: "#/components/schemas/EmailInfo"
+        leadInfo:
+          $ref: "#/components/schemas/LeadInfo"

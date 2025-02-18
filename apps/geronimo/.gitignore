@@ -1,0 +1,14 @@
+.env
+.venv
+.venv01
+venv
+app/test/responses
+app/test/response
+app/test/test_data
+
+
+#ignore __pycache__ folders
+__pycache__/
+__pycache__/*
+*/__pycache__/
+*.pyc
