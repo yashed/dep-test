@@ -4,13 +4,19 @@ FROM python:3.13-slim
 # Set the working directory inside the container
 WORKDIR /apps/geronimo/app
 
-# Install required system dependencies for Selenium & Chrome
+# Install system dependencies required for building Python packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     unzip \
     curl \
     chromium \
     chromium-driver \
+    build-essential \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Set environment variables for Chrome
@@ -19,6 +25,9 @@ ENV CHROME_BIN=/usr/bin/chromium \
 
 # Copy the requirements file first for better caching
 COPY requirements.txt /apps/geronimo/
+
+# Upgrade pip and setuptools (important for building wheels)
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r /apps/geronimo/requirements.txt && \
