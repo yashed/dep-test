@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: FastAPI
   description: API specification for the FastAPI application.
-  version: 0.2.0
+  version: 1.0.1
 servers:
   - url: http://localhost:8000
     description: Local Gateway URL
