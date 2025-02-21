@@ -1,5 +1,5 @@
 # Use an official Python image as the base image
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 # Set the working directory inside the container
 WORKDIR /apps/geronimo/app
@@ -9,8 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     unzip \
     curl \
-    chromium \
-    chromium-driver \
     build-essential \
     gcc \
     g++ \
@@ -19,10 +17,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Set environment variables for Chrome
-ENV CHROME_BIN=/usr/bin/chromium \
-    CHROME_DRIVER_BIN=/usr/bin/chromedriver
-
 # Copy the requirements file first for better caching
 COPY requirements.txt /apps/geronimo/
 
@@ -30,8 +24,7 @@ COPY requirements.txt /apps/geronimo/
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # Install Python dependencies
-RUN pip install --no-cache-dir -r /apps/geronimo/requirements.txt && \
-    pip install --no-cache-dir selenium webdriver-manager
+RUN pip install --no-cache-dir -r /apps/geronimo/requirements.txt
 
 # Copy the entire application code
 COPY . /apps/geronimo/

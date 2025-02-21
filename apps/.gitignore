@@ -22,4 +22,24 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+#Geronimo app git ignore files 
 bandit_test.py
+
+.env
+apps/geronimo/.venv
+apps/geronimo/app/.venv02
+venv
+geronimo/app/test/responses
+geronimo/app/test/response
+geronimo/app/test/test_data
+geronimo/app/.pytest_cache
+geronimo/app/.coverage
+
+
+#ignore __pycache__ folders
+__pycache__/
+__pycache__/*
+*/__pycache__/
+*.pyc
+

@@ -16,6 +16,8 @@ prompt_template_personal_summary = PromptTemplate(
         "- Any interesting professional activities (speaking, writing, research)\n"
         "- Areas they seem passionate about\n\n"
         "- Educational Background and more\n\n"
+        "IMPORTANT - Exclude:\n"
+        "- Personal contact infromations like , Email address , Phone Number like these private data\n\n"
         "Be flexible with role titles - focus on their domain and actual work rather than exact position matches.\n"
         "If you find partial information, include it as long as it helps build a conversation with infromation that can get from given data. do not make assumptions or add information beyond what is explicitly found in the search results.\n"
         "IMPORTANT - Respond 'Geronimo unable to provide information about {name} at {company}' only if:\n"
@@ -29,7 +31,8 @@ prompt_template_personal_summary = PromptTemplate(
         "- Link: The URL of the search result\n"
         "- Snippet: The snippet of the search result , Can use to when generating response if this discribe correct person\n"
         "- Content: This is the web scraped content of the result and it can be an error massage also, ignore this if it is an error\n"
-        "- Possition: The posisition that result placed in the search results, Prioritize top results but verify accuracy\n\n"
+        "- Possition: The posisition that result placed in the search results, Prioritize top results but verify accuracy\n"
+        "Generate response reader friendly way"
         "Google Search Results: {google_results}\n\n"
         "Summary: "
     ),
@@ -50,9 +53,11 @@ prompt_template_social_links = PromptTemplate(
         "Look for these types of profiles:\n"
         "1. Professional Networks: LinkedIn, Xing, etc.\n"
         "2. Tech Profiles: GitHub, GitLab, Stack Overflow\n"
-        "3. Social Media: Twitter, Mastodon\n"
+        "3. Social Media: Twitter,Facebook , Instragram, Mastodon ect \n"
         "4. Content Platforms: Medium, blog sites, speaking profiles\n"
-        "5. Professional Directories: Company staff profile, conference speaker profiles\n"
+        "5. Professional Directories: Company profile page of the person in {company}, conference speaker profiles\n"
+        "6. Educational Profiles: Google Scholer profile, ResearchGate ect. \n"
+        "7. If it includes a person's portfolio or personal website, mention it only if it's correct."
         "Try to find the atleast correct LinkedIn profile of the person from the given results\n"
         "\n"
         "Exclude:\n"
@@ -74,7 +79,7 @@ prompt_template_social_links = PromptTemplate(
 )
 
 prompt_template_company_summary = PromptTemplate(
-    input_variables=["company", "country", "google_company_results"],
+    input_variables=["company", "country", "google_results"],
     template=(
         "Create a detailed company summary for {company} based in {country} using the provided search results. Each search result contains: "
         "title, link, snippet, and content sections.\n\n"
@@ -113,30 +118,35 @@ prompt_template_company_summary = PromptTemplate(
 )
 
 prompt_template_competitors = PromptTemplate(
-    input_variables=["company", "company_competitors_results"],
+    input_variables=["company", "google_results"],
     template=(
-        "Based on the following Google Search results for {company}'s competitors, extract a concise list containing only the names of competitor companies. "
-        "Strictly avoid including product names, services, or any unrelated details. "
-        "Provide 3 to 5 of the most significant competitors based on the search results. "
-        "If no valid company names can be identified, respond with 'No competitors found.' "
-        "Ensure that only competitor company names are returned, and sort the list alphabetically.\n\n"
+        "Analyze the following Google Search results to identify competitor companies for {company}. "
+        "Extract and return only the names of valid competitor companies that are directly mentioned in the provided search results, "
+        "ensuring they are distinct entities in the same domain/industry as {company}. "
+        "Strictly exclude product names, services, or unrelated entities. "
+        "Provide a list of 3 to 5 valid competitor company names as a comma-separated list, sorted alphabetically. "
+        "Do not fabricate or hallucinate any competitors. "
+        "If no valid competitor names can be identified from the results, return an empty response without any text.\n\n"
         "Google Search Results: {google_results}\n\n"
-        "Competitor Company Names:"
+        "Competitor Company Names (comma-separated):"
     ),
 )
 
+
 prompt_template_news = PromptTemplate(
-    input_variables=["company", "company_news_results"],
+    input_variables=["company", "google_results", "date"],
     template=(
-        "Based on the following Google Search results for {company}'s recent news, provide a JSON-formatted summary of the top 3 to 5 most relevant news articles from the last 12 months. "
-        "Only focus on the articals that related to the company, dont mention the articles that with similar name or unrelated to the company. "
+        "Based on the following Google Search results for {company}'s recent news, provide a JSON-formatted summary of the top 3 to 5 most relevant news articles from only the last 12 months. reffer today date that mention in prompt"
+        "If it include past big News then mention them also."
+        "Only focus on the articles that are related to the company, don't mention the articles with similar names or unrelated to the company. "
         "Focus on articles related to the company's financial performance, major partnerships, executive changes, or significant industry developments. "
         "Do not generate news articles, just give the news according to the given data with reference to the URL. "
         "For each article, include the following details:\n"
-        "- 'title': A clear , detailed and accurate title that gives a precise idea of the news.\n"
-        "- 'url': The full complete and correct link to the news article.\n"
+        "- 'title': A clear, detailed, and accurate title that gives a precise idea of the news.\n"
+        "- 'url': The full, complete, and correct link to the news article.\n"
         "- 'description': A concise but informative summary of the news content, not exceeding 100 words.\n"
-        "If no valid news articles are found, respond with 'No recent news found.'\n\n"
+        "If no valid news articles are found, return an empty response without any text.'\n\n"
+        "Today's Date: {date}\n\n"
         "Google Search Results: {google_results}\n\n"
         "Company News Json:"
     ),

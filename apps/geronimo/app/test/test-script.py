@@ -1,8 +1,15 @@
+"""
+This is a manual testing function that loads test data from a CSV file, processes each entry using the `parallel_chain_caller` function, 
+and saves the results to a JSON file. It simulates lead information processing and measures response time for each entry,
+allowing validation of the parallel execution flow.
+"""
+
 import os
 import csv
 import json
 import sys
 import time
+import utils.constants as constants
 
 # Add the project root
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,11 +44,11 @@ def create_lead_info(row):
         "jobTitle": row["job_title"],
         "company": row["company_name"],
         "country": row["country"],
-        "state": "",  # Assuming state is not available in dataset
-        "areaOfInterest": "",  # Placeholder, modify if needed
-        "contactReason": "",  # Placeholder, modify if needed
-        "industry": "",  # Placeholder, modify if needed
-        "canHelpComment": "",  # Placeholder, modify if needed
+        "state": "",
+        "areaOfInterest": "",
+        "contactReason": "",
+        "industry": "",
+        "canHelpComment": "",
     }
 
 
@@ -96,7 +103,7 @@ def main():
             with open(response_path, mode="w", encoding="utf-8") as jsonfile:
                 json.dump(results, jsonfile, indent=4)
         except Exception as e:
-            print(f"Error saving results: {e}")
+            constants.LOGGER.error(f"Error Saving Results: {str(e)}")
 
 
 # Entry point

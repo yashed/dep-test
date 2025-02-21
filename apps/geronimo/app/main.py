@@ -1,67 +1,52 @@
 import os
-from fastapi import FastAPI, HTTPException, Request, Security, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from fastapi.security.api_key import APIKeyHeader
+from pydantic import BaseModel, Field
 import utils.report_generator as report_generator
-from services.mail_service import send_mail
-from dotenv import load_dotenv
-import logging
+from services.mail_service import send_mail_caller
+import utils.constants as constants
 
-load_dotenv(override=True)
 
 # Create FastAPI instance
 app = FastAPI()
-
-# Configure logging
-logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
-
-# Enable CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 
 # Define the request body schema
 class EmailInfo(BaseModel):
     subject: str
-    from_: str
+    from_: str = Field(..., alias="from")
     to: list[str]
     cc: list[str]
 
 
 class LeadInfo(BaseModel):
-    firstName: str
-    lastName: str
-    jobTitle: str
+    first_name: str = Field(..., alias="firstName")
+    last_name: str = Field(..., alias="lastName")
+    job_title: str = Field(..., alias="jobTitle")
     company: str
     country: str
     state: str
-    areaOfInterest: str
-    contactReason: str
+    area_of_interest: str = Field(..., alias="areaOfInterest")
+    contact_reason: str = Field(..., alias="contactReason")
     industry: str
-    canHelpComment: str
+    can_help_comment: str = Field(..., alias="canHelpComment")
 
 
 class LeadRequest(BaseModel):
-    emailInfo: EmailInfo
-    leadInfo: LeadInfo
+    email_info: EmailInfo = Field(..., alias="emailInfo")
+    lead_info: LeadInfo = Field(..., alias="leadInfo")
 
 
-@app.post("/generate_data")
-async def generate_data(request_data: LeadRequest):
+@app.post("/generate_report")
+async def generate_report(request_data: LeadRequest):
     try:
-        lead_info = request_data.leadInfo
-        email_info = request_data.emailInfo
+        print("Request Data - ", request_data)
+        lead_info = request_data.lead_info
+        email_info = request_data.email_info
 
         response = report_generator.parallel_chain_caller(lead_info)
-        send_mail(response, email_info)
+        send_mail_caller(response, email_info)
 
         return JSONResponse(
             content={
@@ -71,10 +56,6 @@ async def generate_data(request_data: LeadRequest):
             status_code=200,
         )
 
-    # HTTP exceptions
-    except HTTPException:
-        raise
-    # unexpected errors
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
+        constants.LOGGER.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")

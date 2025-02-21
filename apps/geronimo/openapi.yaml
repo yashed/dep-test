@@ -1,16 +1,13 @@
 openapi: 3.0.3
 info:
-  title: FastAPI
-  description: API specification for the FastAPI application.
-  version: 1.0.1
-servers:
-  - url: http://localhost:8000
-    description: Local Gateway URL
+  title: Geronimo V1.0.1
+  description: Geronimo API Specification
+  version: 0.2.0
 paths:
-  /generate_data:
+  /generate_report:
     post:
       summary: Generate Data
-      operationId: generate_data
+      operationId: generate_report
       requestBody:
         required: true
         content:

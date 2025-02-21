@@ -1,26 +1,10 @@
 import concurrent.futures
 import requests
 from bs4 import BeautifulSoup
-import time
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
 import utils.llm_caller as llm_caller
-import logging
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(),
-    ],
-)
-logger = logging.getLogger(__name__)
-
-
-TAGS = ["p", "h1", "h2", "li"]
+import utils.constants as constants
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 
 def parallel_scrape_caller(search_results, query, num_result):
@@ -34,7 +18,6 @@ def parallel_scrape_caller(search_results, query, num_result):
     Returns:
         list: A list of dictionaries containing scraped data.
     """
-    # search_results = search_results_dict.get(query, [])
 
     scraped_data = []
     max_workers = num_result
@@ -59,7 +42,7 @@ def parallel_scrape_caller(search_results, query, num_result):
                 if scraped_item:
                     scraped_data.append(scraped_item)
             except Exception as e:
-                logger.error(
+                constants.LOGGER.error(
                     f"Error scraping {task_to_result[task]['link']}: {str(e)}",
                     exc_info=True,
                 )
@@ -67,7 +50,7 @@ def parallel_scrape_caller(search_results, query, num_result):
         # Cancel tasks that exceeded the timeout
         for task in not_done:
             task.cancel()
-            logger.warning(
+            constants.LOGGER.warning(
                 f"Scraping task for {task_to_result[task]['link']} timed out."
             )
 
@@ -104,29 +87,28 @@ def fetch_with_requests(url):
     """
     Fetch content using requests and BeautifulSoup.
     """
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
-        )
-    }
+
     try:
-        response = requests.get(url, headers=headers, timeout=10)
-        if "text/html" not in response.headers.get("Content-Type", ""):
+        # Set up a session with retries
+        session = requests.Session()
+        retries = Retry(
+            total=3, backoff_factor=0.5, status_forcelist=[500, 502, 503, 504]
+        )
+        session.mount("http://", HTTPAdapter(max_retries=retries))
+        session.mount("https://", HTTPAdapter(max_retries=retries))
+
+        response = requests.get(url, headers=constants.HEADERS, timeout=10)
+        if (
+            response.headers.get("Content-Type", "").split(";")[0]
+            not in constants.VALID_CONTENT_TYPES
+        ):
             return ""
 
         response.raise_for_status()
         response.encoding = response.apparent_encoding
         soup = BeautifulSoup(response.text, "html.parser")
 
-        # Check if the page is JavaScript-rendered
-        text_elements = len(soup.find_all(TAGS))
-        script_elements = len(soup.find_all("script"))
-
-        # if text_elements < 4 and script_elements > 5:
-        #     return fetch_with_selenium(url)
-
-        elements = soup.find_all(TAGS)
+        elements = soup.find_all(constants.TAGS)
         content = "\n".join(
             [tag.get_text(strip=True) for tag in elements if tag.get_text(strip=True)]
         )
@@ -134,32 +116,3 @@ def fetch_with_requests(url):
         return content if content else "none"
     except Exception as e:
         return " "
-
-
-def fetch_with_selenium(url):
-    """
-    Fetch webpage content using Selenium for dynamic pages.
-    """
-
-    options = Options()
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=options)
-
-    try:
-        driver.get(url)
-        time.sleep(3)
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        elements = soup.find_all(TAGS)
-        content = "\n".join(
-            [tag.get_text(strip=True) for tag in elements if tag.get_text(strip=True)]
-        )
-
-        return content if content else "none"
-    except Exception as e:
-        return ""
-    finally:
-        driver.quit()

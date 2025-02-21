@@ -1,5 +1,4 @@
 import os
-
 from tenacity import (
     retry,
     stop_after_attempt,
@@ -7,24 +6,9 @@ from tenacity import (
     retry_if_exception_type,
 )
 import base64
-import re
-from dotenv import load_dotenv
 import requests
 from jinja2 import Template
-
-# Load environment variables
-load_dotenv(override=True)
-
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-TOKEN_ENDPOINT = os.getenv("TOKEN_ENDPOINT")
-API_ENDPOINT = os.getenv("API_ENDPOINT")
-ALERT_FROM = os.getenv("FROM_EMAIL")
-TEST_MAIL_ADDRESS = os.getenv("TEST_MAIL_ADDRESS")
-FROM_EMAIL = os.getenv("FROM_EMAIL")
-
-if not all([CLIENT_ID, CLIENT_SECRET, TOKEN_ENDPOINT, API_ENDPOINT]):
-    raise ValueError("One or more required environment variables are missing!")
+import utils.config as config
 
 
 class EmailServiceClient:
@@ -53,7 +37,7 @@ class EmailServiceClient:
             raise Exception(f"Failed to get access token: {response.text}")
 
     @retry(
-        stop=stop_after_attempt(3),  # Retry up to 3 times
+        stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=2, max=10),
         retry=retry_if_exception_type(Exception),
     )
@@ -106,30 +90,14 @@ def format_template(template, response_data):
     Replaces placeholders in the template with the actual data.
     """
 
-    formatted_data = {
-        "person_profile": response_data.get(
-            "professional_summary", "No Personal Detail Available"
-        ),
-        "social_media_links": response_data.get("social_media_links", None),
-        "company_overview": response_data.get(
-            "company_summary", "No Company Detail Available"
-        ),
-        "company_competitors": (
-            response_data.get("company_competitors", "").split(",")
-            if response_data.get("company_competitors")
-            else []
-        ),
-        "company_news": response_data.get("company_news", None),
-    }
-
     jinja_template = Template(template)
 
-    rendered_template = jinja_template.render(formatted_data)
+    rendered_template = jinja_template.render(response_data)
 
     return rendered_template
 
 
-def send_mail(response_data, email_info):
+def send_mail_caller(response_data, email_info):
     """
     Send an email using the new EmailServiceClient.
 
@@ -139,10 +107,10 @@ def send_mail(response_data, email_info):
     """
 
     client = EmailServiceClient(
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        token_endpoint=TOKEN_ENDPOINT,
-        api_endpoint=API_ENDPOINT,
+        client_id=config.CLIENT_ID,
+        client_secret=config.CLIENT_SECRET,
+        token_endpoint=config.TOKEN_ENDPOINT,
+        api_endpoint=config.API_ENDPOINT,
     )
     send_to = email_info.to if email_info.to else [None]
     subject = email_info.subject
@@ -158,7 +126,7 @@ def send_mail(response_data, email_info):
             to_email=send_to,
             template_content=formatted_template,
             subject=subject,
-            from_email=ALERT_FROM,
+            from_email=config.ALERT_FROM,
             cc=cc,
             bcc=bcc,
         )
