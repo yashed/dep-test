@@ -73,6 +73,7 @@ class EmailServiceClient:
             json=email_data,
             verify=True,
         )
+        print("Mail Response : ", response)
         if response.status_code == 200:
             return "Email sent successfully"
         else:
@@ -93,7 +94,6 @@ def format_template(template, response_data):
     jinja_template = Template(template)
 
     rendered_template = jinja_template.render(response_data)
-    print("Rendered Template - ", rendered_template)
     return rendered_template
 
 
