@@ -74,7 +74,7 @@ class EmailServiceClient:
             json=email_data,
             verify=True,
         )
-        print("Mail Response : ", response)
+        print("Mail Response : ", response.text)
         if response.status_code == 200:
             return "Email sent successfully"
         else:
