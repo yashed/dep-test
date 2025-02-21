@@ -93,7 +93,7 @@ def format_template(template, response_data):
     jinja_template = Template(template)
 
     rendered_template = jinja_template.render(response_data)
-
+    print("Rendered Template - ", rendered_template)
     return rendered_template
 
 
@@ -105,6 +105,8 @@ def send_mail_caller(response_data, email_info):
         response_data (dict): The data to be sent in the email.
         email_info (dict): Email details (to, subject, etc.).
     """
+
+    print("Call Mail Sending Function")
 
     client = EmailServiceClient(
         client_id=config.CLIENT_ID,

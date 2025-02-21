@@ -46,7 +46,8 @@ async def generate_report(request_data: LeadRequest):
         email_info = request_data.email_info
 
         response = report_generator.parallel_chain_caller(lead_info)
-        send_mail_caller(response, email_info)
+        mail_responce = send_mail_caller(response, email_info)
+        print(mail_responce)
 
         return JSONResponse(
             content={
