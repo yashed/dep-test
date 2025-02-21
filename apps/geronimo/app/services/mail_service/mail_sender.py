@@ -67,6 +67,7 @@ class EmailServiceClient:
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+        print(email_data)
         response = requests.post(
             f"{self.api_endpoint}/send-email",
             headers=headers,
